@@ -63,17 +63,17 @@ const BarcodeScanner = ({ branding, isFullscreen, onToggleFullscreen }) => {
   const handleInputChangeWithAutoSearch = (e) => {
     const value = e.target.value.trim();
 
-    // Auto-search when we have enough characters (works for both manual typing and barcode scanners)
+    // Debounce the search - wait for user to stop typing
+    clearTimeout(window.searchTimeout);
+
     if (value.length >= 6) {
-      // Debounce the search to avoid too many requests
-      clearTimeout(window.searchTimeout);
       window.searchTimeout = setTimeout(() => {
         handleScan(value);
-        // Clear the input after successful search
+        // Clear the input after search
         if (inputRef.current) {
           inputRef.current.value = '';
         }
-      }, 100); // Shorter delay for better UX
+      }, 500); // Wait 500ms after last keystroke
     }
   };
 

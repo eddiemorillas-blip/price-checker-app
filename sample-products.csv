@@ -1,0 +1,6 @@
+barcode,name,price,category,brand,stock_quantity,description
+1234567890123,Sample Widget A,19.99,Electronics,Acme,50,High quality widget for testing
+9876543210987,Sample Widget B,29.99,Electronics,Acme,25,Premium widget with extra features
+5555555555555,Sample Gadget C,39.99,Home,BrandCo,100,Useful home gadget
+1111111111111,Sample Tool D,49.99,Tools,ToolMaster,75,Professional grade tool
+2222222222222,Sample Device E,59.99,Electronics,TechCorp,30,Advanced electronic device

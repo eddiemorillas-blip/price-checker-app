@@ -1,0 +1,30 @@
+{
+  "name": "retail-price-checker",
+  "version": "1.0.0",
+  "description": "Retail store price checker with barcode scanning",
+  "scripts": {
+    "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
+    "server:dev": "cd server && npm run dev",
+    "client:dev": "cd client && npm start",
+    "build": "npm run setup && cd client && npm run build",
+    "start": "cd server && npm start",
+    "setup": "npm run setup:server && npm run setup:client",
+    "setup:server": "cd server && npm install",
+    "setup:client": "cd client && npm install",
+    "sync-inventory": "node scripts/sync-inventory-to-github.js"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  },
+  "keywords": [
+    "retail",
+    "barcode",
+    "price-checker",
+    "pos"
+  ],
+  "author": "Retail Store",
+  "license": "MIT",
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  }
+}

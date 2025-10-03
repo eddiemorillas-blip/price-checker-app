@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Build output
+client/build/
+dist/
+
+# Environment variables
+.env
+server/.env
+client/.env
+
+# Logs
+*.log
+npm-debug.log*
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+.cache/
+
+# Database
+*.db
+*.sqlite
+
+# Excel files (except sample)
+*.xlsx
+!sample-products.xlsx
+
+# Upload directories
+uploads/
+github-upload/
+
+# Testing
+coverage/
+.nyc_output/

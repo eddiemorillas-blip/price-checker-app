@@ -87,19 +87,19 @@ const BarcodeScanner = ({ branding, isFullscreen, onToggleFullscreen }) => {
 
   return (
     <div className="barcode-scanner" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: product ? '375px 400px 400px' : '375px 400px', columnGap: '4rem', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: product ? '300px 350px 350px' : '300px 350px', columnGap: '2rem', alignItems: 'center', justifyContent: 'center' }}>
         {/* Left side - Chair logo */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginRight: '2rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
           <img
             src="/logo.png"
             alt="The Front Logo"
             className="w-auto"
-            style={{ height: '375px', filter: 'invert(1) brightness(1.2)' }}
+            style={{ height: '300px', filter: 'invert(1) brightness(1.2)' }}
           />
         </div>
 
         {/* Middle - Scanner card */}
-        <div style={{ transform: 'scale(1.25)', transformOrigin: 'center center', width: '320px' }}>
+        <div style={{ transform: 'scale(1.1)', transformOrigin: 'center center', width: '320px' }}>
           <div className="card" style={{ width: '320px' }}>
             <div className="card-header" style={{ padding: '1.5rem 2rem', position: 'relative' }}>
               <div className="text-center">
@@ -172,7 +172,7 @@ const BarcodeScanner = ({ branding, isFullscreen, onToggleFullscreen }) => {
 
         {/* Right side - Product display */}
         {product && (
-          <div style={{ transform: 'scale(1.25)', transformOrigin: 'center center', width: '320px' }}>
+          <div style={{ transform: 'scale(1.1)', transformOrigin: 'center center', width: '320px' }}>
             <ProductDisplay
               product={product}
               branding={branding}

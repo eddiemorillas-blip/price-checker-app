@@ -8,21 +8,6 @@ const BarcodeScanner = ({ branding, isFullscreen, onToggleFullscreen }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      const isCurrentlyFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
-      if (isCurrentlyFullscreen !== isFullscreen) {
-        onToggleFullscreen();
-      }
-    };
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
-    };
-  }, [isFullscreen, onToggleFullscreen]);
 
   // Auto-clear product after 30 seconds
   useEffect(() => {
@@ -36,34 +21,9 @@ const BarcodeScanner = ({ branding, isFullscreen, onToggleFullscreen }) => {
   }, [product]);
 
   const toggleFullscreen = () => {
-    const elem = document.documentElement;
-
-    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-      // Try standard fullscreen first
-      if (elem.requestFullscreen) {
-        elem.requestFullscreen().catch(err => {
-          console.error('Error attempting to enable fullscreen:', err);
-        });
-      }
-      // Try webkit (Safari/iOS) fullscreen
-      else if (elem.webkitRequestFullscreen) {
-        elem.webkitRequestFullscreen().catch(err => {
-          console.error('Error attempting to enable webkit fullscreen:', err);
-        });
-      }
-      // Fallback for iOS - just toggle the state manually
-      else {
-        onToggleFullscreen();
-      }
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      } else if (document.webkitExitFullscreen) {
-        document.webkitExitFullscreen();
-      } else {
-        onToggleFullscreen();
-      }
-    }
+    // Simply toggle the fullscreen state without using browser fullscreen API
+    // This works reliably across all devices including iPad
+    onToggleFullscreen();
   };
 
   const handleScan = async (barcode) => {
@@ -151,16 +111,16 @@ const BarcodeScanner = ({ branding, isFullscreen, onToggleFullscreen }) => {
               <button
                 onClick={toggleFullscreen}
                 className="btn btn-outline btn-sm"
-                style={{ position: 'absolute', top: '1rem', right: '1rem' }}
-                title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+                style={{
+                  position: 'absolute',
+                  top: '1rem',
+                  right: '1rem',
+                  fontSize: '0.75rem',
+                  padding: '0.5rem'
+                }}
+                title={isFullscreen ? "Show Header" : "Hide Header"}
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  {isFullscreen ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                  )}
-                </svg>
+                {isFullscreen ? "Exit" : "Hide Header"}
               </button>
             </div>
 

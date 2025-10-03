@@ -66,7 +66,6 @@ const BarcodeScanner = ({ branding, isFullscreen, onToggleFullscreen }) => {
   const scannerOptions = branding?.scannerSettings || {};
 
   const {
-    manualScan,
     inputRef,
   } = useBarcode(handleScan, scannerOptions);
 

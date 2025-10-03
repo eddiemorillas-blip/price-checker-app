@@ -90,7 +90,7 @@ export const useBarcode = (onScan, options = {}) => {
       return;
     }
 
-    if (char.length === 1 && /[\w\-]/.test(char)) {
+    if (char.length === 1 && /[\w-]/.test(char)) {
       event.preventDefault();
       scanBufferRef.current += char;
 

@@ -66,12 +66,8 @@ const BarcodeScanner = ({ branding, isFullscreen, onToggleFullscreen }) => {
   const scannerOptions = branding?.scannerSettings || {};
 
   const {
-    isListening,
-    startListening,
-    stopListening,
     manualScan,
     inputRef,
-    handleInputChange,
   } = useBarcode(handleScan, scannerOptions);
 
   // Simple input change handler for manual typing and barcode scanners
@@ -89,14 +85,6 @@ const BarcodeScanner = ({ branding, isFullscreen, onToggleFullscreen }) => {
           inputRef.current.value = '';
         }
       }, 100); // Shorter delay for better UX
-    }
-  };
-
-  const handleManualSubmit = (e) => {
-    e.preventDefault();
-    const barcode = inputRef.current?.value?.trim();
-    if (barcode) {
-      manualScan(barcode);
     }
   };
 

@@ -1,42 +1,15 @@
 import React from 'react';
 
-const ProductDisplay = ({ product, branding }) => {
+const ProductDisplay = ({ product }) => {
   if (!product?.product) return null;
 
-  const { product: productData, priceHistory } = product;
-  const displaySettings = branding?.displaySettings || {};
+  const { product: productData } = product;
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
     }).format(price);
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString();
-  };
-
-  const getStockStatusColor = (status) => {
-    switch (status) {
-      case 'low':
-        return 'text-warning';
-      case 'out':
-        return 'text-error';
-      default:
-        return 'text-success';
-    }
-  };
-
-  const getStockStatusText = (status, quantity) => {
-    switch (status) {
-      case 'low':
-        return `Low Stock (${quantity})`;
-      case 'out':
-        return 'Out of Stock';
-      default:
-        return `In Stock (${quantity})`;
-    }
   };
 
   return (

@@ -58,13 +58,32 @@ app.get('/api/health', (req, res) => {
 });
 
 app.get('/api/products/search/:barcode', (req, res) => {
-  const { barcode } = req.params;
+  let { barcode } = req.params;
+
+  // Normalize barcode - remove spaces, leading zeros for flexible matching
+  barcode = barcode.trim();
 
   // Get product database from upload routes
   const productDatabase = uploadRoutes.getProductDatabase();
-  const product = productDatabase[barcode];
+
+  // Try exact match first
+  let product = productDatabase[barcode];
+
+  // If no exact match, try normalized matching
+  if (!product) {
+    const normalizedSearchBarcode = barcode.replace(/^0+/, ''); // Remove leading zeros
+
+    for (const [key, value] of Object.entries(productDatabase)) {
+      const normalizedDbBarcode = key.trim().replace(/^0+/, '');
+      if (normalizedDbBarcode === normalizedSearchBarcode || key === barcode) {
+        product = value;
+        break;
+      }
+    }
+  }
 
   if (!product) {
+    console.log(`Product not found for barcode: "${barcode}". Database has ${Object.keys(productDatabase).length} products.`);
     return res.status(404).json({
       error: 'Product not found',
       barcode: barcode

@@ -1,14 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Toaster } from 'react-hot-toast';
 
-import Header from './components/Header';
 import BarcodeScanner from './components/BarcodeScanner';
-import UploadPage from './pages/UploadPage';
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('scanner');
-  const [isFullscreen, setIsFullscreen] = useState(false);
-
   // Default branding
   const branding = {
     storeName: 'The Front',
@@ -19,27 +14,10 @@ function App() {
     }
   };
 
-  const renderCurrentPage = () => {
-    switch (currentPage) {
-      case 'upload':
-        return <UploadPage branding={branding} />;
-      default:
-        return <BarcodeScanner branding={branding} isFullscreen={isFullscreen} onToggleFullscreen={() => setIsFullscreen(!isFullscreen)} />;
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
-      {!isFullscreen && (
-        <Header
-          branding={branding}
-          currentPage={currentPage}
-          onNavigate={setCurrentPage}
-        />
-      )}
-
-      <main className={isFullscreen ? "" : "container py-2"}>
-        {renderCurrentPage()}
+      <main>
+        <BarcodeScanner branding={branding} />
       </main>
 
       <Toaster

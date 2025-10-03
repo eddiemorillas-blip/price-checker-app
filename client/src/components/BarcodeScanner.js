@@ -3,11 +3,10 @@ import { useBarcode } from '../hooks/useBarcode';
 import { productService } from '../services/api';
 import ProductDisplay from './ProductDisplay';
 
-const BarcodeScanner = ({ branding, isFullscreen, onToggleFullscreen }) => {
+const BarcodeScanner = ({ branding }) => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
 
   // Auto-clear product after 30 seconds
   useEffect(() => {
@@ -19,12 +18,6 @@ const BarcodeScanner = ({ branding, isFullscreen, onToggleFullscreen }) => {
       return () => clearTimeout(timer);
     }
   }, [product]);
-
-  const toggleFullscreen = () => {
-    // Simply toggle the fullscreen state without using browser fullscreen API
-    // This works reliably across all devices including iPad
-    onToggleFullscreen();
-  };
 
   const handleScan = async (barcode) => {
     try {
@@ -52,12 +45,12 @@ const BarcodeScanner = ({ branding, isFullscreen, onToggleFullscreen }) => {
     inputRef,
   } = useBarcode(handleScan, scannerOptions);
 
-  // Auto-focus input when entering fullscreen
+  // Auto-focus input on mount
   useEffect(() => {
-    if (isFullscreen && inputRef.current) {
+    if (inputRef.current) {
       inputRef.current.focus();
     }
-  }, [isFullscreen, inputRef]);
+  }, [inputRef]);
 
   // Simple input change handler for manual typing and barcode scanners
   const handleInputChangeWithAutoSearch = (e) => {
@@ -108,20 +101,6 @@ const BarcodeScanner = ({ branding, isFullscreen, onToggleFullscreen }) => {
                   Scan a barcode or type manually below.
                 </p>
               </div>
-              <button
-                onClick={toggleFullscreen}
-                className="btn btn-outline btn-sm"
-                style={{
-                  position: 'absolute',
-                  top: '1rem',
-                  right: '1rem',
-                  fontSize: '0.75rem',
-                  padding: '0.5rem'
-                }}
-                title={isFullscreen ? "Show Header" : "Hide Header"}
-              >
-                {isFullscreen ? "Exit" : "Hide Header"}
-              </button>
             </div>
 
             <div className="card-body" style={{ padding: '1.5rem 2rem' }}>

@@ -79,8 +79,8 @@ const BarcodeScanner = ({ branding }) => {
   };
 
   return (
-    <div className="barcode-scanner" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 2rem' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: product ? '300px 350px 350px' : '300px 350px', columnGap: '2rem', alignItems: 'center' }}>
+    <div className="barcode-scanner" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: product ? '300px 350px 350px' : '300px 350px', columnGap: '2rem', alignItems: 'center', margin: '0 auto', maxWidth: 'fit-content' }}>
         {/* Left side - Chair logo */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
           <img

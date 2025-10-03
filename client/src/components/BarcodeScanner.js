@@ -10,15 +10,17 @@ const BarcodeScanner = ({ branding, isFullscreen, onToggleFullscreen }) => {
 
   useEffect(() => {
     const handleFullscreenChange = () => {
-      const isCurrentlyFullscreen = !!document.fullscreenElement;
+      const isCurrentlyFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
       if (isCurrentlyFullscreen !== isFullscreen) {
         onToggleFullscreen();
       }
     };
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
     };
   }, [isFullscreen, onToggleFullscreen]);
 
@@ -34,12 +36,33 @@ const BarcodeScanner = ({ branding, isFullscreen, onToggleFullscreen }) => {
   }, [product]);
 
   const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(err => {
-        console.error('Error attempting to enable fullscreen:', err);
-      });
+    const elem = document.documentElement;
+
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+      // Try standard fullscreen first
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen().catch(err => {
+          console.error('Error attempting to enable fullscreen:', err);
+        });
+      }
+      // Try webkit (Safari/iOS) fullscreen
+      else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen().catch(err => {
+          console.error('Error attempting to enable webkit fullscreen:', err);
+        });
+      }
+      // Fallback for iOS - just toggle the state manually
+      else {
+        onToggleFullscreen();
+      }
     } else {
-      document.exitFullscreen();
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else {
+        onToggleFullscreen();
+      }
     }
   };
 

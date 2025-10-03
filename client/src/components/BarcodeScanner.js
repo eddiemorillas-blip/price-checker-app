@@ -33,6 +33,13 @@ const BarcodeScanner = ({ branding, isFullscreen, onToggleFullscreen }) => {
     }
   }, [product]);
 
+  // Auto-focus input when entering fullscreen
+  useEffect(() => {
+    if (isFullscreen && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isFullscreen, inputRef]);
+
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(err => {

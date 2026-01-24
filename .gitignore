@@ -46,3 +46,4 @@ github-upload/
 # Testing
 coverage/
 .nyc_output/
+credentials/

@@ -7,31 +7,30 @@ const path = require('path');
 require('dotenv').config();
 
 const uploadRoutes = require('./routes/upload');
-const GitHubSyncService = require('./services/githubSync');
+const BigQuerySyncService = require('./services/bigquerySync');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// GitHub sync configuration
-const githubSync = new GitHubSyncService({
-  repoOwner: process.env.GITHUB_REPO_OWNER || '',
-  repoName: process.env.GITHUB_REPO_NAME || '',
-  filePath: process.env.GITHUB_FILE_PATH || 'products.csv',
-  branch: process.env.GITHUB_BRANCH || 'main',
-  githubToken: process.env.GITHUB_TOKEN || ''
+// BigQuery sync configuration
+const bigquerySync = new BigQuerySyncService({
+  projectId: process.env.BIGQUERY_PROJECT_ID || 'front-data-production',
+  keyFilename: process.env.BIGQUERY_KEY_FILE || path.join(__dirname, '../credentials/bigquery-service-account copy.json'),
+  productsTable: process.env.BIGQUERY_PRODUCTS_TABLE || 'dataform.products_all',
+  inventoryTable: process.env.BIGQUERY_INVENTORY_TABLE || 'dataform.INVENTORY_on_hand_report'
 });
 
-// Load products from GitHub on startup
-async function loadProductsFromGitHub() {
+// Load products from BigQuery on startup
+async function loadProductsFromBigQuery() {
   try {
-    console.log('Loading products from GitHub...');
-    const products = await githubSync.fetchProductsFromGitHub();
-    const database = githubSync.productsToDatabase(products);
+    console.log('Loading products from BigQuery...');
+    const products = await bigquerySync.fetchProductsFromBigQuery();
+    const database = bigquerySync.productsToDatabase(products);
     uploadRoutes.setProductDatabase(database);
-    console.log(`✅ Loaded ${products.length} products from GitHub`);
+    console.log(`✅ Loaded ${products.length} products from BigQuery`);
     return true;
   } catch (error) {
-    console.error('❌ Failed to load from GitHub:', error.message);
+    console.error('❌ Failed to load from BigQuery:', error.message);
     console.log('⚠️  Server will continue with existing product database');
     return false;
   }
@@ -128,19 +127,19 @@ app.get('/api/branding', (req, res) => {
 // Manual refresh endpoint
 app.post('/api/products/refresh', async (req, res) => {
   try {
-    const success = await loadProductsFromGitHub();
+    const success = await loadProductsFromBigQuery();
     if (success) {
       const productDatabase = uploadRoutes.getProductDatabase();
       res.json({
         success: true,
-        message: 'Products refreshed from GitHub',
+        message: 'Products refreshed from BigQuery',
         productCount: Object.keys(productDatabase).length,
         timestamp: new Date().toISOString()
       });
     } else {
       res.status(500).json({
         success: false,
-        message: 'Failed to refresh products from GitHub'
+        message: 'Failed to refresh products from BigQuery'
       });
     }
   } catch (error) {
@@ -178,17 +177,13 @@ app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 
-  // Load products from GitHub on startup
-  await loadProductsFromGitHub();
+  // Load products from BigQuery on startup
+  await loadProductsFromBigQuery();
 
   // Setup cron job to refresh every 6 hours (0 */6 * * *)
-  if (process.env.GITHUB_REPO_OWNER && process.env.GITHUB_REPO_NAME) {
-    console.log('📅 Setting up auto-refresh: every 6 hours');
-    cron.schedule('0 */6 * * *', async () => {
-      console.log('⏰ Auto-refresh triggered');
-      await loadProductsFromGitHub();
-    });
-  } else {
-    console.log('⚠️  GitHub not configured. Set GITHUB_REPO_OWNER and GITHUB_REPO_NAME in .env');
-  }
+  console.log('📅 Setting up auto-refresh: every 6 hours');
+  cron.schedule('0 */6 * * *', async () => {
+    console.log('⏰ Auto-refresh triggered');
+    await loadProductsFromBigQuery();
+  });
 });

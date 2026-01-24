@@ -9,67 +9,54 @@ const ProductDisplay = ({ product }) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
+      minimumFractionDigits: 2,
     }).format(price);
   };
 
+  // Build details array for any available product info
+  const details = [];
+  if (productData.category) {
+    details.push({ label: 'Category', value: productData.category });
+  }
+  if (productData.size) {
+    details.push({ label: 'Size', value: productData.size });
+  }
+  if (productData.color) {
+    details.push({ label: 'Color', value: productData.color });
+  }
+  if (productData.barcode) {
+    details.push({ label: 'SKU', value: productData.barcode });
+  }
+
   return (
-    <div className="product-display">
-      <div className="card" style={{ width: '320px', minHeight: '100%' }}>
-        <div className="card-header">
-          <div style={{
-            textAlign: 'center',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            gap: '0.5rem'
-          }}>
-            {productData.brand && (
-              <p style={{
-                fontSize: '1rem',
-                color: 'var(--text-secondary)',
-                fontWeight: '600',
-                margin: 0
-              }}>
-                {productData.brand}
-              </p>
-            )}
-            <h3 style={{
-              fontSize: '1.5rem',
-              fontWeight: '700',
-              color: 'var(--text-color)',
-              lineHeight: '1.2',
-              margin: 0
-            }}>
-              {productData.name}
-            </h3>
-            {productData.description && (
-              <p style={{
-                fontSize: '0.875rem',
-                color: 'var(--text-muted)',
-                margin: 0
-              }}>
-                {productData.description}
-              </p>
-            )}
-            <div style={{
-              fontSize: '2.5rem',
-              fontWeight: '800',
-              color: 'var(--primary-color)',
-              marginTop: '0.5rem'
-            }}>
-              {formatPrice(productData.price)}
-            </div>
-            {productData.category && (
-              <p style={{
-                fontSize: '0.75rem',
-                color: 'var(--text-muted)',
-                margin: 0
-              }}>
-                {productData.category}
-              </p>
-            )}
-          </div>
+    <div className="product-card">
+      {/* Header with brand and name */}
+      <div className="product-header">
+        {productData.brand && (
+          <p className="product-brand">{productData.brand}</p>
+        )}
+        <h2 className="product-name">{productData.name}</h2>
+      </div>
+
+      {/* Body with price and details */}
+      <div className="product-body">
+        {/* Price Section */}
+        <div className="product-price-section">
+          <p className="product-price-label">Price</p>
+          <p className="product-price">{formatPrice(productData.price)}</p>
         </div>
+
+        {/* Product Details */}
+        {details.length > 0 && (
+          <div className="product-details">
+            {details.map((detail, index) => (
+              <div key={index} className="product-detail-row">
+                <span className="product-detail-label">{detail.label}</span>
+                <span className="product-detail-value">{detail.value}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

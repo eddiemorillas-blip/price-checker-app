@@ -79,87 +79,75 @@ const BarcodeScanner = ({ branding }) => {
   };
 
   return (
-    <div className="barcode-scanner" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: product ? '300px 350px 350px' : '300px 350px', columnGap: '2rem', alignItems: 'center', margin: '0 auto', maxWidth: 'fit-content' }}>
-        {/* Left side - Chair logo */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+    <div className="scanner-container">
+      <div className="scanner-layout">
+        {/* Logo */}
+        <div className="scanner-logo">
           <img
             src="/logo.png"
             alt="The Front Logo"
-            className="w-auto"
-            style={{ height: '300px', filter: 'invert(1) brightness(1.2)' }}
+            style={{
+              height: '220px',
+              width: 'auto',
+              filter: 'brightness(0) invert(1)',
+              opacity: 0.85
+            }}
           />
         </div>
 
-        {/* Middle - Scanner card */}
-        <div style={{ transform: 'scale(1.1)', transformOrigin: 'center center', width: '320px' }}>
-          <div className="card" style={{ width: '320px' }}>
-            <div className="card-header" style={{ padding: '1.5rem 2rem', position: 'relative' }}>
-              <div className="text-center">
-                <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--text-color)' }}>Price Checker</h2>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                  Scan a barcode or type manually below.
-                </p>
-              </div>
+        {/* Scanner Card */}
+        <div className="scanner-card">
+          <div className="scanner-card-header">
+            <h1 className="scanner-title">Price Checker</h1>
+            <p className="scanner-subtitle">Scan or enter barcode</p>
+          </div>
+
+          <div className="scanner-card-body">
+            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+              <label className="form-label" htmlFor="barcodeInput">
+                Barcode
+              </label>
+              <input
+                ref={inputRef}
+                id="barcodeInput"
+                type="text"
+                className="form-input large"
+                placeholder="Scan barcode here..."
+                onChange={handleInputChangeWithAutoSearch}
+                disabled={loading}
+                autoComplete="off"
+              />
             </div>
 
-            <div className="card-body" style={{ padding: '1.5rem 2rem' }}>
-              <div className="mb-3">
-                <div className="form-group">
-                  <label className="form-label" htmlFor="barcodeInput">
-                    Barcode Input
-                  </label>
-                  <input
-                    ref={inputRef}
-                    id="barcodeInput"
-                    type="text"
-                    className="form-input large"
-                    placeholder="Scan barcode here"
-                    onChange={handleInputChangeWithAutoSearch}
-                    disabled={loading}
-                    autoComplete="off"
-                  />
-                </div>
+            <button
+              onClick={clearResults}
+              className="btn btn-outline"
+              disabled={loading}
+              style={{ width: '100%' }}
+            >
+              Clear
+            </button>
+
+            {loading && (
+              <div className="loading-overlay" style={{ marginTop: '1.5rem' }}>
+                <span className="loading"></span>
+                <span>Searching...</span>
               </div>
+            )}
 
-              <div className="mb-3">
-                <button
-                  onClick={clearResults}
-                  className="btn btn-outline"
-                  disabled={loading}
-                  style={{ width: '100%' }}
-                >
-                  Clear Results
-                </button>
+            {error && (
+              <div className="alert alert-error" style={{ marginTop: '1.5rem', marginBottom: 0 }}>
+                {error}
               </div>
-
-              {loading && (
-                <div className="alert alert-info text-center">
-                  <span className="loading mr-2"></span>
-                  Searching for product...
-                </div>
-              )}
-
-              {error && (
-                <div className="alert alert-error">
-                  {error}
-                </div>
-              )}
-            </div>
+            )}
           </div>
         </div>
 
-        {/* Right side - Product display */}
+        {/* Product Display */}
         {product && (
-          <div style={{ transform: 'scale(1.1)', transformOrigin: 'center center', width: '320px' }}>
-            <ProductDisplay
-              product={product}
-              branding={branding}
-            />
-          </div>
+          <ProductDisplay product={product} branding={branding} />
         )}
       </div>
-
     </div>
   );
 };

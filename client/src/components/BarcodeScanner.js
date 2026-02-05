@@ -50,14 +50,25 @@ const BarcodeScanner = ({ branding }) => {
   const {
     isScanning,
     isInitializing,
+    isPaused,
     error: cameraError,
     startScanning,
+    pauseScanning,
+    resumeScanning,
     containerId,
   } = useCameraScanner(handleScan, scannerOptions);
+
+  // Pause scanning when product is displayed
+  useEffect(() => {
+    if (product || error) {
+      pauseScanning();
+    }
+  }, [product, error, pauseScanning]);
 
   const clearResults = () => {
     setProduct(null);
     setError(null);
+    resumeScanning();
   };
 
   return (
@@ -90,6 +101,7 @@ const BarcodeScanner = ({ branding }) => {
               containerId={containerId}
               isInitializing={isInitializing}
               isScanning={isScanning}
+              isPaused={isPaused}
               error={cameraError}
               onStartCamera={startScanning}
             />

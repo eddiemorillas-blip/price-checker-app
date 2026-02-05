@@ -4,6 +4,7 @@ import { Html5Qrcode } from 'html5-qrcode';
 export const useCameraScanner = (onScan, options = {}) => {
   const [isScanning, setIsScanning] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [error, setError] = useState(null);
   const [lastScanTime, setLastScanTime] = useState(0);
 
@@ -48,7 +49,15 @@ export const useCameraScanner = (onScan, options = {}) => {
     }
   }, [successSound, errorSound]);
 
+  const isPausedRef = useRef(isPaused);
+  isPausedRef.current = isPaused;
+
   const handleScanSuccess = useCallback((decodedText) => {
+    // Check if paused
+    if (isPausedRef.current) {
+      return;
+    }
+
     const now = Date.now();
 
     // Cooldown check
@@ -70,6 +79,15 @@ export const useCameraScanner = (onScan, options = {}) => {
       playSound('success');
     }
   }, [lastScanTime, scanCooldown, onScan, playSound]);
+
+  const pauseScanning = useCallback(() => {
+    setIsPaused(true);
+  }, []);
+
+  const resumeScanning = useCallback(() => {
+    setIsPaused(false);
+    setLastScanTime(0); // Reset cooldown
+  }, []);
 
   const getPreferredCamera = useCallback(async () => {
     try {
@@ -197,10 +215,13 @@ export const useCameraScanner = (onScan, options = {}) => {
   return {
     isScanning,
     isInitializing,
+    isPaused,
     error,
     startScanning,
     stopScanning,
     toggleScanning,
+    pauseScanning,
+    resumeScanning,
     containerId: containerIdRef.current,
   };
 };

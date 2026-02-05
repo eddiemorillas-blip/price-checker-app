@@ -259,6 +259,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: 2rem;
+  overflow-y: auto;
 }
 
 .scanner-layout {
@@ -266,6 +267,8 @@ body {
   align-items: center;
   justify-content: center;
   gap: 4rem;
+  flex-wrap: wrap;
+  max-width: 100%;
 }
 
 .scanner-logo {
@@ -739,20 +742,42 @@ body {
   display: none !important;
 }
 
-/* iPad landscape mode - larger camera view */
+/* iPad landscape mode - optimized for iPad Mini */
 @media (min-width: 768px) and (orientation: landscape) {
+  .scanner-container {
+    padding: 1rem;
+    align-items: flex-start;
+    padding-top: 2rem;
+  }
+
+  .scanner-layout {
+    gap: 2rem;
+  }
+
+  .scanner-logo {
+    display: none; /* Hide logo in landscape to save space */
+  }
+
   .scanner-card {
-    width: 500px;
+    width: 420px;
   }
 
   .camera-container {
-    aspect-ratio: 16 / 10;
-    min-height: 280px;
+    aspect-ratio: 16 / 9;
+    min-height: 200px;
   }
 
   .scanning-frame {
-    width: 320px;
-    height: 180px;
+    width: 280px;
+    height: 140px;
+  }
+
+  .product-card {
+    width: 340px;
+  }
+
+  .product-price {
+    font-size: 2.5rem;
   }
 }
 
@@ -770,4 +795,9 @@ body {
     width: 280px;
     height: 160px;
   }
+}
+
+/* Paused camera overlay */
+.camera-paused {
+  background-color: rgba(0, 0, 0, 0.5);
 }

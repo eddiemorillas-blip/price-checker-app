@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useBarcode } from '../hooks/useBarcode';
+import { useCameraScanner } from '../hooks/useCameraScanner';
 import { productService } from '../services/api';
 import ProductDisplay from './ProductDisplay';
+import CameraPreview from './CameraPreview';
 
 const BarcodeScanner = ({ branding }) => {
   const [product, setProduct] = useState(null);
@@ -34,48 +35,29 @@ const BarcodeScanner = ({ branding }) => {
         setError('Failed to lookup product. Please try again.');
       }
       console.error('Barcode scan error:', err);
+      throw err; // Re-throw for sound feedback
     } finally {
       setLoading(false);
     }
   };
 
-  const scannerOptions = branding?.scannerSettings || {};
+  const scannerOptions = {
+    ...(branding?.scannerSettings || {}),
+    scanCooldown: 2000,
+    preferBackCamera: true,
+  };
 
   const {
-    inputRef,
-  } = useBarcode(handleScan, scannerOptions);
-
-  // Auto-focus input on mount
-  useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [inputRef]);
-
-  // Simple input change handler for manual typing and barcode scanners
-  const handleInputChangeWithAutoSearch = (e) => {
-    const value = e.target.value.trim();
-
-    // Debounce the search - wait for user to stop typing
-    clearTimeout(window.searchTimeout);
-
-    if (value.length >= 6) {
-      window.searchTimeout = setTimeout(() => {
-        handleScan(value);
-        // Clear the input after search
-        if (inputRef.current) {
-          inputRef.current.value = '';
-        }
-      }, 500); // Wait 500ms after last keystroke
-    }
-  };
+    isScanning,
+    isInitializing,
+    error: cameraError,
+    startScanning,
+    containerId,
+  } = useCameraScanner(handleScan, scannerOptions);
 
   const clearResults = () => {
     setProduct(null);
     setError(null);
-    if (inputRef.current) {
-      inputRef.current.value = '';
-    }
   };
 
   return (
@@ -99,31 +81,24 @@ const BarcodeScanner = ({ branding }) => {
         <div className="scanner-card">
           <div className="scanner-card-header">
             <h1 className="scanner-title">Price Checker</h1>
-            <p className="scanner-subtitle">Scan or enter barcode</p>
+            <p className="scanner-subtitle">Scan barcode with camera</p>
           </div>
 
           <div className="scanner-card-body">
-            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-              <label className="form-label" htmlFor="barcodeInput">
-                Barcode
-              </label>
-              <input
-                ref={inputRef}
-                id="barcodeInput"
-                type="text"
-                className="form-input large"
-                placeholder="Scan barcode here..."
-                onChange={handleInputChangeWithAutoSearch}
-                disabled={loading}
-                autoComplete="off"
-              />
-            </div>
+            {/* Camera Preview */}
+            <CameraPreview
+              containerId={containerId}
+              isInitializing={isInitializing}
+              isScanning={isScanning}
+              error={cameraError}
+              onStartCamera={startScanning}
+            />
 
             <button
               onClick={clearResults}
               className="btn btn-outline"
               disabled={loading}
-              style={{ width: '100%' }}
+              style={{ width: '100%', marginTop: '1rem' }}
             >
               Clear
             </button>

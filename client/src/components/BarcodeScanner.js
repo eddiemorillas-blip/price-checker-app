@@ -108,11 +108,11 @@ const BarcodeScanner = ({ branding }) => {
 
             <button
               onClick={clearResults}
-              className="btn btn-outline"
+              className="btn btn-primary"
               disabled={loading}
               style={{ width: '100%', marginTop: '1rem' }}
             >
-              Clear
+              Scan Another Item
             </button>
 
             {loading && (

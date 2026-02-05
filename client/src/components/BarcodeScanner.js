@@ -1,13 +1,56 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useCameraScanner } from '../hooks/useCameraScanner';
 import { productService } from '../services/api';
 import ProductDisplay from './ProductDisplay';
 import CameraPreview from './CameraPreview';
+import AttractScreen from './AttractScreen';
+
+const IDLE_TIMEOUT = 60000; // 60 seconds
 
 const BarcodeScanner = ({ branding }) => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isIdle, setIsIdle] = useState(false);
+
+  const idleTimerRef = useRef(null);
+
+  // Reset idle timer on activity
+  const resetIdleTimer = useCallback(() => {
+    if (idleTimerRef.current) {
+      clearTimeout(idleTimerRef.current);
+    }
+    setIsIdle(false);
+    idleTimerRef.current = setTimeout(() => {
+      setIsIdle(true);
+    }, IDLE_TIMEOUT);
+  }, []);
+
+  // Set up idle detection
+  useEffect(() => {
+    const events = ['touchstart', 'mousedown', 'keydown'];
+
+    const handleActivity = () => {
+      resetIdleTimer();
+    };
+
+    // Start the timer
+    resetIdleTimer();
+
+    // Listen for user activity
+    events.forEach(event => {
+      document.addEventListener(event, handleActivity);
+    });
+
+    return () => {
+      if (idleTimerRef.current) {
+        clearTimeout(idleTimerRef.current);
+      }
+      events.forEach(event => {
+        document.removeEventListener(event, handleActivity);
+      });
+    };
+  }, [resetIdleTimer]);
 
   // Auto-clear product after 30 seconds
   useEffect(() => {
@@ -21,6 +64,7 @@ const BarcodeScanner = ({ branding }) => {
   }, [product]);
 
   const handleScan = async (barcode) => {
+    resetIdleTimer(); // Reset on scan
     try {
       setLoading(true);
       setError(null);
@@ -58,18 +102,29 @@ const BarcodeScanner = ({ branding }) => {
     containerId,
   } = useCameraScanner(handleScan, scannerOptions);
 
-  // Pause scanning when product is displayed
+  // Pause scanning when product is displayed or idle
   useEffect(() => {
-    if (product || error) {
+    if (product || error || isIdle) {
       pauseScanning();
     }
-  }, [product, error, pauseScanning]);
+  }, [product, error, isIdle, pauseScanning]);
 
   const clearResults = () => {
     setProduct(null);
     setError(null);
     resumeScanning();
   };
+
+  const handleAttractTap = () => {
+    setIsIdle(false);
+    resetIdleTimer();
+    resumeScanning();
+  };
+
+  // Show attract screen when idle
+  if (isIdle) {
+    return <AttractScreen onTap={handleAttractTap} />;
+  }
 
   return (
     <div className="scanner-container">

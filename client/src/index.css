@@ -801,3 +801,86 @@ body {
 .camera-paused {
   background-color: rgba(0, 0, 0, 0.5);
 }
+
+/* ========================================
+   ATTRACT SCREEN STYLES
+   ======================================== */
+
+.attract-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--background-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1000;
+}
+
+.attract-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2rem;
+}
+
+.attract-logo {
+  height: 180px;
+  width: auto;
+  filter: brightness(0) invert(1);
+  opacity: 0.9;
+  margin-bottom: 3rem;
+}
+
+.attract-title {
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: var(--text-color);
+  letter-spacing: -0.02em;
+  margin-bottom: 2rem;
+}
+
+.attract-pulse {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  opacity: 0.8;
+  animation: attractPulse 2s ease-in-out infinite;
+}
+
+@keyframes attractPulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+}
+
+/* iPad landscape attract screen */
+@media (min-width: 768px) and (orientation: landscape) {
+  .attract-logo {
+    height: 140px;
+    margin-bottom: 2rem;
+  }
+
+  .attract-title {
+    font-size: 2rem;
+  }
+
+  .attract-pulse {
+    width: 60px;
+    height: 60px;
+  }
+}

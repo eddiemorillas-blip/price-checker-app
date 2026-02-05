@@ -13,9 +13,21 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // BigQuery sync configuration
+// Support credentials from env var (production) or file (local dev)
+let bigQueryCredentials = null;
+if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
+  try {
+    bigQueryCredentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
+    console.log('Using BigQuery credentials from environment variable');
+  } catch (e) {
+    console.error('Failed to parse GOOGLE_APPLICATION_CREDENTIALS_JSON:', e.message);
+  }
+}
+
 const bigquerySync = new BigQuerySyncService({
   projectId: process.env.BIGQUERY_PROJECT_ID || 'front-data-production',
-  keyFilename: process.env.BIGQUERY_KEY_FILE || path.join(__dirname, '../credentials/bigquery-service-account copy.json'),
+  credentials: bigQueryCredentials,
+  keyFilename: !bigQueryCredentials ? (process.env.BIGQUERY_KEY_FILE || path.join(__dirname, '../credentials/bigquery-service-account copy.json')) : null,
   productsTable: process.env.BIGQUERY_PRODUCTS_TABLE || 'dataform.products_all',
   inventoryTable: process.env.BIGQUERY_INVENTORY_TABLE || 'dataform.INVENTORY_on_hand_report'
 });

@@ -4,14 +4,23 @@ const path = require('path');
 class BigQuerySyncService {
   constructor(config) {
     this.projectId = config.projectId || 'front-data-production';
-    this.keyFilename = config.keyFilename;
     this.productsTable = config.productsTable || 'dataform.products_all';
     this.inventoryTable = config.inventoryTable || 'dataform.INVENTORY_on_hand_report';
 
-    this.bigquery = new BigQuery({
-      projectId: this.projectId,
-      keyFilename: this.keyFilename
-    });
+    // Support credentials from environment variable (for production) or file (for local dev)
+    const bigQueryOptions = {
+      projectId: this.projectId
+    };
+
+    if (config.credentials) {
+      // Use credentials object directly (from env var)
+      bigQueryOptions.credentials = config.credentials;
+    } else if (config.keyFilename) {
+      // Use key file (for local development)
+      bigQueryOptions.keyFilename = config.keyFilename;
+    }
+
+    this.bigquery = new BigQuery(bigQueryOptions);
   }
 
   /**

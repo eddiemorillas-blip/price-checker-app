@@ -152,14 +152,15 @@ const BarcodeScanner = ({ branding }) => {
               onStartCamera={startScanning}
             />
 
-            <button
-              onClick={clearResults}
-              className="btn btn-secondary"
-              disabled={loading}
-              style={{ width: '100%', marginTop: '0.75rem' }}
-            >
-              Scan Another Item
-            </button>
+            {(product || error) && (
+              <button
+                onClick={clearResults}
+                className="btn btn-secondary"
+                style={{ width: '100%', marginTop: '0.75rem' }}
+              >
+                Scan Another Item
+              </button>
+            )}
 
             {loading && (
               <div className="loading-overlay" style={{ marginTop: '1.25rem' }}>

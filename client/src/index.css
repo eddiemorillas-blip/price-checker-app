@@ -803,6 +803,86 @@ body {
 }
 
 /* ========================================
+   CAMERA INDICATOR STYLES
+   ======================================== */
+
+.camera-indicator {
+  position: fixed;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: var(--radius-md);
+  color: var(--text-color);
+  font-size: 0.875rem;
+  z-index: 100;
+  animation: indicatorPulse 2s ease-in-out infinite;
+}
+
+.camera-indicator-arrow {
+  font-size: 1.25rem;
+  color: var(--primary-color);
+}
+
+.camera-indicator-icon {
+  font-size: 1rem;
+}
+
+/* Position variants */
+.camera-indicator.top-left {
+  top: 1rem;
+  left: 1rem;
+}
+
+.camera-indicator.top-right {
+  top: 1rem;
+  right: 1rem;
+  flex-direction: row-reverse;
+}
+
+.camera-indicator.top-center {
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  flex-direction: column;
+}
+
+.camera-indicator.bottom-left {
+  bottom: 1rem;
+  left: 1rem;
+}
+
+.camera-indicator.bottom-right {
+  bottom: 1rem;
+  right: 1rem;
+  flex-direction: row-reverse;
+}
+
+.camera-indicator.bottom-center {
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  flex-direction: column-reverse;
+}
+
+@keyframes indicatorPulse {
+  0%, 100% {
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Hide indicator on small screens or when not needed */
+@media (max-width: 600px) {
+  .camera-indicator {
+    display: none;
+  }
+}
+
+/* ========================================
    ATTRACT SCREEN STYLES
    ======================================== */
 

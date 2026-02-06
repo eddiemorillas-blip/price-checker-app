@@ -3,6 +3,7 @@ import { useCameraScanner } from '../hooks/useCameraScanner';
 import { productService } from '../services/api';
 import ProductDisplay from './ProductDisplay';
 import CameraPreview from './CameraPreview';
+import CameraIndicator from './CameraIndicator';
 import AttractScreen from './AttractScreen';
 
 const IDLE_TIMEOUT = 60000; // 60 seconds
@@ -140,6 +141,9 @@ const BarcodeScanner = ({ branding }) => {
 
   return (
     <div className="scanner-container">
+      {/* Camera position indicator */}
+      {isScanning && !isPaused && <CameraIndicator />}
+
       <div className="scanner-layout">
         {/* Logo */}
         <div className="scanner-logo">

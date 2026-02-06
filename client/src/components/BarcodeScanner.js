@@ -15,6 +15,7 @@ const BarcodeScanner = ({ branding }) => {
   const [isIdle, setIsIdle] = useState(false);
 
   const idleTimerRef = useRef(null);
+  const shouldStartCameraRef = useRef(false);
 
   // Reset idle timer on activity
   const resetIdleTimer = useCallback(() => {
@@ -125,11 +126,19 @@ const BarcodeScanner = ({ branding }) => {
   };
 
   const handleAttractTap = () => {
+    // Mark that we should start camera after re-render
+    shouldStartCameraRef.current = true;
     setIsIdle(false);
     resetIdleTimer();
-    // Always start camera when waking from attract screen (camera was fully stopped when idle)
-    startScanning();
   };
+
+  // Start camera after waking from attract screen (must wait for DOM to be ready)
+  useEffect(() => {
+    if (!isIdle && shouldStartCameraRef.current) {
+      shouldStartCameraRef.current = false;
+      startScanning();
+    }
+  }, [isIdle, startScanning]);
 
   // Show attract screen when idle
   if (isIdle) {

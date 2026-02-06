@@ -202,6 +202,25 @@ export const useCameraScanner = (onScan, options = {}) => {
     }
   }, [isScanning, startScanning, stopScanning]);
 
+  // Force restart camera (for wake from sleep scenarios)
+  const restartScanning = useCallback(async () => {
+    // Force stop regardless of state
+    if (scannerRef.current) {
+      try {
+        await scannerRef.current.stop();
+      } catch (err) {
+        // Ignore errors when stopping
+      }
+    }
+    setIsScanning(false);
+    setIsInitializing(false);
+
+    // Small delay then start fresh
+    setTimeout(() => {
+      startScanning();
+    }, 100);
+  }, [startScanning]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -219,6 +238,7 @@ export const useCameraScanner = (onScan, options = {}) => {
     error,
     startScanning,
     stopScanning,
+    restartScanning,
     toggleScanning,
     pauseScanning,
     resumeScanning,

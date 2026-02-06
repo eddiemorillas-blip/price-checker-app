@@ -106,6 +106,7 @@ const BarcodeScanner = ({ branding }) => {
     error: cameraError,
     startScanning,
     stopScanning,
+    restartScanning,
     containerId,
   } = useCameraScanner(handleScan, scannerOptions);
 
@@ -114,18 +115,17 @@ const BarcodeScanner = ({ branding }) => {
     if (isIdle) {
       stopScanning();
     } else {
-      startScanning();
+      // Use restart to handle cases where camera is in bad state
+      restartScanning();
     }
-  }, [isIdle, startScanning, stopScanning]);
+  }, [isIdle, restartScanning, stopScanning]);
 
   // Restart camera when waking from device sleep
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && !isIdle) {
-        // Small delay to let the system settle after wake
-        setTimeout(() => {
-          startScanning();
-        }, 500);
+        // Force restart camera after wake
+        restartScanning();
       }
     };
 
@@ -133,7 +133,7 @@ const BarcodeScanner = ({ branding }) => {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [isIdle, startScanning]);
+  }, [isIdle, restartScanning]);
 
   const clearResults = () => {
     setProduct(null);

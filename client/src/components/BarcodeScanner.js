@@ -15,7 +15,6 @@ const BarcodeScanner = ({ branding }) => {
   const [isIdle, setIsIdle] = useState(false);
 
   const idleTimerRef = useRef(null);
-  const shouldStartCameraRef = useRef(false);
 
   // Reset idle timer on activity
   const resetIdleTimer = useCallback(() => {
@@ -100,45 +99,27 @@ const BarcodeScanner = ({ branding }) => {
     error: cameraError,
     startScanning,
     stopScanning,
-    pauseScanning,
-    resumeScanning,
     containerId,
   } = useCameraScanner(handleScan, scannerOptions);
 
-  // Pause scanning when product is displayed
-  useEffect(() => {
-    if (product || error) {
-      pauseScanning();
-    }
-  }, [product, error, pauseScanning]);
-
-  // Stop camera completely when idle to save battery
+  // Keep camera running when active, stop when idle
   useEffect(() => {
     if (isIdle) {
       stopScanning();
+    } else {
+      startScanning();
     }
-  }, [isIdle, stopScanning]);
+  }, [isIdle, startScanning, stopScanning]);
 
   const clearResults = () => {
     setProduct(null);
     setError(null);
-    resumeScanning();
   };
 
   const handleAttractTap = () => {
-    // Mark that we should start camera after re-render
-    shouldStartCameraRef.current = true;
     setIsIdle(false);
     resetIdleTimer();
   };
-
-  // Start camera after waking from attract screen (must wait for DOM to be ready)
-  useEffect(() => {
-    if (!isIdle && shouldStartCameraRef.current) {
-      shouldStartCameraRef.current = false;
-      startScanning();
-    }
-  }, [isIdle, startScanning]);
 
   // Show attract screen when idle
   if (isIdle) {

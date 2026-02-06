@@ -15,6 +15,10 @@ const BarcodeScanner = ({ branding }) => {
   const [isIdle, setIsIdle] = useState(false);
 
   const idleTimerRef = useRef(null);
+  const hasResultRef = useRef(false);
+
+  // Track if we have a result (for scan callback)
+  hasResultRef.current = product || error || loading;
 
   // Reset idle timer on activity
   const resetIdleTimer = useCallback(() => {
@@ -65,6 +69,9 @@ const BarcodeScanner = ({ branding }) => {
   }, [product]);
 
   const handleScan = async (barcode) => {
+    // Ignore scans if already showing a result
+    if (hasResultRef.current) return;
+
     resetIdleTimer(); // Reset on scan
     try {
       setLoading(true);
@@ -110,6 +117,23 @@ const BarcodeScanner = ({ branding }) => {
       startScanning();
     }
   }, [isIdle, startScanning, stopScanning]);
+
+  // Restart camera when waking from device sleep
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && !isIdle) {
+        // Small delay to let the system settle after wake
+        setTimeout(() => {
+          startScanning();
+        }, 500);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isIdle, startScanning]);
 
   const clearResults = () => {
     setProduct(null);

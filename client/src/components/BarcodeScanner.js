@@ -97,17 +97,25 @@ const BarcodeScanner = ({ branding }) => {
     isPaused,
     error: cameraError,
     startScanning,
+    stopScanning,
     pauseScanning,
     resumeScanning,
     containerId,
   } = useCameraScanner(handleScan, scannerOptions);
 
-  // Pause scanning when product is displayed or idle
+  // Pause scanning when product is displayed
   useEffect(() => {
-    if (product || error || isIdle) {
+    if (product || error) {
       pauseScanning();
     }
-  }, [product, error, isIdle, pauseScanning]);
+  }, [product, error, pauseScanning]);
+
+  // Stop camera completely when idle to save battery
+  useEffect(() => {
+    if (isIdle) {
+      stopScanning();
+    }
+  }, [isIdle, stopScanning]);
 
   const clearResults = () => {
     setProduct(null);

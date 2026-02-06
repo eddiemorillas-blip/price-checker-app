@@ -16,6 +16,7 @@ const BarcodeScanner = ({ branding }) => {
 
   const idleTimerRef = useRef(null);
   const hasResultRef = useRef(false);
+  const wasIdleRef = useRef(false);
 
   // Track if we have a result (for scan callback)
   hasResultRef.current = product || error || loading;
@@ -114,11 +115,17 @@ const BarcodeScanner = ({ branding }) => {
   useEffect(() => {
     if (isIdle) {
       stopScanning();
-    } else {
-      // Use restart to handle cases where camera is in bad state
+      wasIdleRef.current = true;
+    } else if (wasIdleRef.current) {
+      // Only restart when waking from idle, not on initial mount
+      wasIdleRef.current = false;
       restartScanning();
+    } else {
+      // Initial mount - just start normally
+      startScanning();
     }
-  }, [isIdle, restartScanning, stopScanning]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isIdle]);
 
   // Restart camera when waking from device sleep
   useEffect(() => {
@@ -133,7 +140,8 @@ const BarcodeScanner = ({ branding }) => {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [isIdle, restartScanning]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isIdle]);
 
   const clearResults = () => {
     setProduct(null);

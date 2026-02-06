@@ -139,31 +139,19 @@ const BarcodeScanner = ({ branding }) => {
     return <AttractScreen onTap={handleAttractTap} />;
   }
 
+  const hasResult = product || error || loading;
+
   return (
     <div className="scanner-container">
       {/* Camera position indicator */}
       {isScanning && !isPaused && <CameraIndicator />}
 
-      <div className="scanner-layout">
-        {/* Logo */}
-        <div className="scanner-logo">
-          <img
-            src="/logo.png"
-            alt="The Front Logo"
-            style={{
-              height: '220px',
-              width: 'auto',
-              filter: 'brightness(0) invert(1)',
-              opacity: 0.85
-            }}
-          />
-        </div>
-
+      <div className={`scanner-layout ${hasResult ? 'has-result' : 'scanner-only'}`}>
         {/* Scanner Card */}
         <div className="scanner-card">
           <div className="scanner-card-header">
             <h1 className="scanner-title">Price Checker</h1>
-            <p className="scanner-subtitle">Scan barcode with camera</p>
+            <p className="scanner-subtitle">Scan a barcode to see pricing</p>
           </div>
 
           <div className="scanner-card-body">
@@ -179,22 +167,22 @@ const BarcodeScanner = ({ branding }) => {
 
             <button
               onClick={clearResults}
-              className="btn btn-primary"
+              className="btn btn-secondary"
               disabled={loading}
-              style={{ width: '100%', marginTop: '1rem' }}
+              style={{ width: '100%', marginTop: '0.75rem' }}
             >
               Scan Another Item
             </button>
 
             {loading && (
-              <div className="loading-overlay" style={{ marginTop: '1.5rem' }}>
+              <div className="loading-overlay" style={{ marginTop: '1.25rem' }}>
                 <span className="loading"></span>
-                <span>Searching...</span>
+                <span>Looking up product...</span>
               </div>
             )}
 
             {error && (
-              <div className="alert alert-error" style={{ marginTop: '1.5rem', marginBottom: 0 }}>
+              <div className="alert alert-error" style={{ marginTop: '1.25rem', marginBottom: 0 }}>
                 {error}
               </div>
             )}

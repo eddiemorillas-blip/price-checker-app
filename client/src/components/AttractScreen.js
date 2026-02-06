@@ -10,6 +10,7 @@ const AttractScreen = ({ onTap }) => {
           className="attract-logo"
         />
         <h1 className="attract-title">Tap to Check Prices</h1>
+        <p className="attract-subtitle">Scan any item to see pricing</p>
         <div className="attract-pulse"></div>
       </div>
     </div>

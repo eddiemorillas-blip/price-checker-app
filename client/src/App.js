@@ -37,7 +37,7 @@ function App() {
           error: {
             duration: 5000,
             style: {
-              background: '#E12727',
+              background: '#c42020',
             },
           },
         }}

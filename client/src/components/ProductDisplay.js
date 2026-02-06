@@ -42,7 +42,7 @@ const ProductDisplay = ({ product }) => {
       <div className="product-body">
         {/* Price Section */}
         <div className="product-price-section">
-          <p className="product-price-label">Price</p>
+          <p className="product-price-label">Retail Price</p>
           <p className="product-price">{formatPrice(productData.price)}</p>
         </div>
 

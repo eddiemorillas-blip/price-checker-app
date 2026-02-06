@@ -119,6 +119,10 @@ const BarcodeScanner = ({ branding }) => {
     setIsIdle(false);
     resetIdleTimer();
     resumeScanning();
+    // Restart camera if it's not scanning
+    if (!isScanning) {
+      startScanning();
+    }
   };
 
   // Show attract screen when idle

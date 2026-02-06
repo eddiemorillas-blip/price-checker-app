@@ -1,19 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* Refined dark luxury palette */
-  --primary-color: #c9a962;
-  --primary-dark: #b8944d;
-  --primary-light: #d4bc7d;
-  --secondary-color: #8b8b8b;
-  --accent-color: #c9a962;
+  /* The Front Brand Colors */
+  --primary-color: #E12727;
+  --primary-dark: #961B1E;
+  --primary-light: #FF4D4D;
+  --secondary-color: #C4C4C4;
+  --accent-color: #9FCDD2;
 
-  /* Deep, rich backgrounds */
+  /* Deep backgrounds with charcoal influence */
   --background-color: #0a0a0a;
   --surface-color: #141414;
   --surface-elevated: #1a1a1a;
 
-  /* Refined text hierarchy */
+  /* Text hierarchy */
   --text-color: #fafafa;
   --text-secondary: #a3a3a3;
   --text-muted: #6b6b6b;
@@ -25,17 +25,17 @@
   --border-color: #2a2a2a;
   --border-light: #1f1f1f;
 
-  /* Status colors - muted for elegance */
+  /* Status colors */
   --success-color: #4ade80;
-  --error-color: #f87171;
+  --error-color: #E12727;
   --warning-color: #fbbf24;
-  --info-color: #60a5fa;
+  --info-color: #9FCDD2;
 
   /* Refined shadows */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
-  --shadow-glow: 0 0 40px rgba(201, 169, 98, 0.1);
+  --shadow-glow: 0 0 40px rgba(225, 39, 39, 0.15);
 
   /* Refined radii */
   --radius-sm: 0.25rem;
@@ -204,7 +204,7 @@ body {
 .form-input:focus {
   outline: none;
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(201, 169, 98, 0.1);
+  box-shadow: 0 0 0 3px rgba(225, 39, 39, 0.15);
 }
 
 .form-input.large {

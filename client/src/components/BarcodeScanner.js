@@ -17,6 +17,7 @@ const BarcodeScanner = ({ branding }) => {
   const idleTimerRef = useRef(null);
   const hasResultRef = useRef(false);
   const wasIdleRef = useRef(false);
+  const wasHiddenRef = useRef(false);
 
   // Track if we have a result (for scan callback)
   hasResultRef.current = product || error || loading;
@@ -130,15 +131,32 @@ const BarcodeScanner = ({ branding }) => {
   // Restart camera when waking from device sleep
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && !isIdle) {
+      if (document.visibilityState === 'hidden') {
+        // Track that we went to hidden state
+        wasHiddenRef.current = true;
+      } else if (document.visibilityState === 'visible' && wasHiddenRef.current && !isIdle) {
+        // Only restart if we were actually hidden (device sleep/screen off)
+        wasHiddenRef.current = false;
         // Force restart camera after wake
         restartScanning();
       }
     };
 
+    // pageshow event is more reliable on iOS for detecting wake from sleep
+    const handlePageShow = (event) => {
+      // persisted means page was restored from bfcache (back/forward cache)
+      // This also fires on wake from sleep on iOS
+      if (event.persisted && !isIdle) {
+        restartScanning();
+      }
+    };
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pageshow', handlePageShow);
+
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pageshow', handlePageShow);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isIdle]);

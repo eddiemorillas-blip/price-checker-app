@@ -10,6 +10,7 @@ export const useCameraScanner = (onScan, options = {}) => {
 
   const scannerRef = useRef(null);
   const containerIdRef = useRef('camera-scanner-container');
+  const isRestartingRef = useRef(false);
 
   const {
     scanCooldown = 2000, // 2 second cooldown between scans
@@ -184,15 +185,15 @@ export const useCameraScanner = (onScan, options = {}) => {
   }, [isScanning, isInitializing, getPreferredCamera, handleScanSuccess]);
 
   const stopScanning = useCallback(async () => {
-    if (!scannerRef.current || !isScanning) return;
+    if (!scannerRef.current) return;
 
     try {
       await scannerRef.current.stop();
-      setIsScanning(false);
     } catch (err) {
-      console.error('Error stopping camera:', err);
+      // Ignore errors - scanner may already be stopped
     }
-  }, [isScanning]);
+    setIsScanning(false);
+  }, []);
 
   const toggleScanning = useCallback(async () => {
     if (isScanning) {
@@ -204,21 +205,32 @@ export const useCameraScanner = (onScan, options = {}) => {
 
   // Force restart camera (for wake from sleep scenarios)
   const restartScanning = useCallback(async () => {
-    // Force stop regardless of state
+    // Prevent concurrent restart attempts
+    if (isRestartingRef.current) {
+      return;
+    }
+    isRestartingRef.current = true;
+
+    // Force stop and destroy scanner instance
     if (scannerRef.current) {
       try {
         await scannerRef.current.stop();
       } catch (err) {
-        // Ignore errors when stopping
+        // Ignore errors when stopping - scanner may already be in bad state
       }
+      // Clear the instance so a fresh one is created
+      scannerRef.current = null;
     }
+
     setIsScanning(false);
     setIsInitializing(false);
+    setError(null);
 
-    // Small delay then start fresh
+    // Longer delay for camera hardware to fully release (especially on mobile)
     setTimeout(() => {
+      isRestartingRef.current = false;
       startScanning();
-    }, 100);
+    }, 500);
   }, [startScanning]);
 
   // Cleanup on unmount

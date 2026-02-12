@@ -11,6 +11,10 @@ export const useCameraScanner = (onScan, options = {}) => {
   const scannerRef = useRef(null);
   const containerIdRef = useRef('camera-scanner-container');
   const isRestartingRef = useRef(false);
+  const retryCountRef = useRef(0);
+  const isScanningRef = useRef(false);
+  const isInitializingRef = useRef(false);
+  const maxRetries = 3;
 
   const {
     scanCooldown = 2000, // 2 second cooldown between scans
@@ -120,8 +124,10 @@ export const useCameraScanner = (onScan, options = {}) => {
   }, [preferBackCamera]);
 
   const startScanning = useCallback(async () => {
-    if (isScanning || isInitializing) return;
+    // Use refs for guards to avoid stale closure issues during retries
+    if (isScanningRef.current || isInitializingRef.current) return;
 
+    isInitializingRef.current = true;
     setIsInitializing(true);
     setError(null);
 
@@ -164,9 +170,42 @@ export const useCameraScanner = (onScan, options = {}) => {
         () => {} // Ignore scan failures (no barcode in frame)
       );
 
+      isScanningRef.current = true;
       setIsScanning(true);
+      retryCountRef.current = 0;
     } catch (err) {
       console.error('Error starting camera:', err);
+
+      // Check if we should retry (for transient errors after wake)
+      const isTransientError =
+        err.message?.includes('NotReadableError') ||
+        err.name === 'NotReadableError' ||
+        err.message?.includes('Could not start video source') ||
+        err.message?.includes('Starting video source');
+
+      if (isTransientError && retryCountRef.current < maxRetries) {
+        retryCountRef.current += 1;
+        const delay = retryCountRef.current * 1000;
+        console.log(`Camera start failed, retrying in ${delay}ms (attempt ${retryCountRef.current}/${maxRetries})`);
+
+        // Clear container and scanner for retry
+        const container = document.getElementById(containerIdRef.current);
+        if (container) {
+          container.innerHTML = '';
+        }
+        scannerRef.current = null;
+        isInitializingRef.current = false;
+        setIsInitializing(false);
+
+        setTimeout(() => {
+          isScanningRef.current = false;
+          isInitializingRef.current = false;
+          setIsScanning(false);
+          setIsInitializing(false);
+          startScanning();
+        }, delay);
+        return;
+      }
 
       let errorMessage = 'Failed to start camera';
 
@@ -179,10 +218,12 @@ export const useCameraScanner = (onScan, options = {}) => {
       }
 
       setError(errorMessage);
+      retryCountRef.current = 0;
     } finally {
+      isInitializingRef.current = false;
       setIsInitializing(false);
     }
-  }, [isScanning, isInitializing, getPreferredCamera, handleScanSuccess]);
+  }, [getPreferredCamera, handleScanSuccess]);
 
   const stopScanning = useCallback(async () => {
     if (!scannerRef.current) return;
@@ -192,6 +233,7 @@ export const useCameraScanner = (onScan, options = {}) => {
     } catch (err) {
       // Ignore errors - scanner may already be stopped
     }
+    isScanningRef.current = false;
     setIsScanning(false);
   }, []);
 
@@ -210,6 +252,7 @@ export const useCameraScanner = (onScan, options = {}) => {
       return;
     }
     isRestartingRef.current = true;
+    retryCountRef.current = 0;
 
     // Force stop and destroy scanner instance
     if (scannerRef.current) {
@@ -222,15 +265,23 @@ export const useCameraScanner = (onScan, options = {}) => {
       scannerRef.current = null;
     }
 
+    // Clear any stale video elements from the container
+    const container = document.getElementById(containerIdRef.current);
+    if (container) {
+      container.innerHTML = '';
+    }
+
+    isScanningRef.current = false;
+    isInitializingRef.current = false;
     setIsScanning(false);
     setIsInitializing(false);
     setError(null);
 
-    // Longer delay for camera hardware to fully release (especially on mobile)
+    // Longer delay for camera hardware to fully release after sleep
     setTimeout(() => {
       isRestartingRef.current = false;
       startScanning();
-    }, 500);
+    }, 1000);
   }, [startScanning]);
 
   // Cleanup on unmount

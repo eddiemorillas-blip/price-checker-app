@@ -18,6 +18,8 @@ const BarcodeScanner = ({ branding }) => {
   const hasResultRef = useRef(false);
   const wasIdleRef = useRef(false);
   const wasHiddenRef = useRef(false);
+  const lastTickRef = useRef(Date.now());
+  const watchdogRef = useRef(null);
 
   // Track if we have a result (for scan callback)
   hasResultRef.current = product || error || loading;
@@ -151,12 +153,44 @@ const BarcodeScanner = ({ branding }) => {
       }
     };
 
+    // Focus event - helps with Guided Access mode on iOS
+    const handleFocus = () => {
+      if (!isIdle) {
+        // Small delay to let the system settle
+        setTimeout(() => {
+          restartScanning();
+        }, 100);
+      }
+    };
+
+    // Watchdog timer to detect wake from sleep via time gaps
+    // In Guided Access mode, other events may not fire reliably
+    const startWatchdog = () => {
+      lastTickRef.current = Date.now();
+      watchdogRef.current = setInterval(() => {
+        const now = Date.now();
+        const elapsed = now - lastTickRef.current;
+        lastTickRef.current = now;
+
+        // If more than 2 seconds passed between ticks, device likely woke from sleep
+        if (elapsed > 2000 && !isIdle) {
+          restartScanning();
+        }
+      }, 1000);
+    };
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('pageshow', handlePageShow);
+    window.addEventListener('focus', handleFocus);
+    startWatchdog();
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('pageshow', handlePageShow);
+      window.removeEventListener('focus', handleFocus);
+      if (watchdogRef.current) {
+        clearInterval(watchdogRef.current);
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isIdle]);

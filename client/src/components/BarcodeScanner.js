@@ -140,8 +140,8 @@ const BarcodeScanner = ({ branding }) => {
       if (isIdle) return;
 
       const now = Date.now();
-      // Ignore if we already handled a wake in the last 3 seconds
-      if (now - lastWakeTimeRef.current < 3000) {
+      // Ignore if we already handled a wake in the last 5 seconds
+      if (now - lastWakeTimeRef.current < 5000) {
         return;
       }
 
@@ -150,11 +150,12 @@ const BarcodeScanner = ({ branding }) => {
         clearTimeout(wakeDebounceRef.current);
       }
 
-      // Debounce: wait 200ms for all wake events to settle, then restart once
+      // Wait 1 second for camera to potentially recover on its own,
+      // then check if restart is actually needed
       wakeDebounceRef.current = setTimeout(() => {
         lastWakeTimeRef.current = Date.now();
         restartScanning();
-      }, 200);
+      }, 1000);
     };
 
     const handleVisibilityChange = () => {

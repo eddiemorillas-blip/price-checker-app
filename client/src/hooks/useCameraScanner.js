@@ -245,12 +245,36 @@ export const useCameraScanner = (onScan, options = {}) => {
     }
   }, [isScanning, startScanning, stopScanning]);
 
+  // Check if camera video stream is actually working
+  const isCameraWorking = useCallback(() => {
+    const container = document.getElementById(containerIdRef.current);
+    if (!container) return false;
+
+    const video = container.querySelector('video');
+    if (!video) return false;
+
+    // Check if video has valid dimensions and is playing
+    const hasValidStream = video.srcObject &&
+      video.readyState >= 2 && // HAVE_CURRENT_DATA or better
+      video.videoWidth > 0 &&
+      video.videoHeight > 0 &&
+      !video.paused;
+
+    return hasValidStream;
+  }, []);
+
   // Force restart camera (for wake from sleep scenarios)
   const restartScanning = useCallback(async () => {
     // Prevent concurrent restart attempts
     if (isRestartingRef.current) {
       return;
     }
+
+    // Check if camera is actually working - if so, don't restart
+    if (isScanningRef.current && isCameraWorking()) {
+      return;
+    }
+
     isRestartingRef.current = true;
     retryCountRef.current = 0;
 
@@ -281,8 +305,8 @@ export const useCameraScanner = (onScan, options = {}) => {
     setTimeout(() => {
       isRestartingRef.current = false;
       startScanning();
-    }, 1000);
-  }, [startScanning]);
+    }, 1500);
+  }, [startScanning, isCameraWorking]);
 
   // Cleanup on unmount
   useEffect(() => {

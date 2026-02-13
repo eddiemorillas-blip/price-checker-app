@@ -20,6 +20,8 @@ const BarcodeScanner = ({ branding }) => {
   const wasHiddenRef = useRef(false);
   const lastTickRef = useRef(Date.now());
   const watchdogRef = useRef(null);
+  const wakeDebounceRef = useRef(null);
+  const lastWakeTimeRef = useRef(0);
 
   // Track if we have a result (for scan callback)
   hasResultRef.current = product || error || loading;
@@ -132,39 +134,49 @@ const BarcodeScanner = ({ branding }) => {
 
   // Restart camera when waking from device sleep
   useEffect(() => {
+    // Debounced wake handler - ensures only one restart per wake event
+    // Multiple events (visibility, focus, watchdog) may fire simultaneously
+    const handleWake = () => {
+      if (isIdle) return;
+
+      const now = Date.now();
+      // Ignore if we already handled a wake in the last 3 seconds
+      if (now - lastWakeTimeRef.current < 3000) {
+        return;
+      }
+
+      // Clear any pending debounced restart
+      if (wakeDebounceRef.current) {
+        clearTimeout(wakeDebounceRef.current);
+      }
+
+      // Debounce: wait 200ms for all wake events to settle, then restart once
+      wakeDebounceRef.current = setTimeout(() => {
+        lastWakeTimeRef.current = Date.now();
+        restartScanning();
+      }, 200);
+    };
+
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
-        // Track that we went to hidden state
         wasHiddenRef.current = true;
-      } else if (document.visibilityState === 'visible' && wasHiddenRef.current && !isIdle) {
-        // Only restart if we were actually hidden (device sleep/screen off)
+      } else if (document.visibilityState === 'visible' && wasHiddenRef.current) {
         wasHiddenRef.current = false;
-        // Force restart camera after wake
-        restartScanning();
+        handleWake();
       }
     };
 
-    // pageshow event is more reliable on iOS for detecting wake from sleep
     const handlePageShow = (event) => {
-      // persisted means page was restored from bfcache (back/forward cache)
-      // This also fires on wake from sleep on iOS
-      if (event.persisted && !isIdle) {
-        restartScanning();
+      if (event.persisted) {
+        handleWake();
       }
     };
 
-    // Focus event - helps with Guided Access mode on iOS
     const handleFocus = () => {
-      if (!isIdle) {
-        // Small delay to let the system settle
-        setTimeout(() => {
-          restartScanning();
-        }, 100);
-      }
+      handleWake();
     };
 
     // Watchdog timer to detect wake from sleep via time gaps
-    // In Guided Access mode, other events may not fire reliably
     const startWatchdog = () => {
       lastTickRef.current = Date.now();
       watchdogRef.current = setInterval(() => {
@@ -173,8 +185,8 @@ const BarcodeScanner = ({ branding }) => {
         lastTickRef.current = now;
 
         // If more than 2 seconds passed between ticks, device likely woke from sleep
-        if (elapsed > 2000 && !isIdle) {
-          restartScanning();
+        if (elapsed > 2000) {
+          handleWake();
         }
       }, 1000);
     };
@@ -190,6 +202,9 @@ const BarcodeScanner = ({ branding }) => {
       window.removeEventListener('focus', handleFocus);
       if (watchdogRef.current) {
         clearInterval(watchdogRef.current);
+      }
+      if (wakeDebounceRef.current) {
+        clearTimeout(wakeDebounceRef.current);
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

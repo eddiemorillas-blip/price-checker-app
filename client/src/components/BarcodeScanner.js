@@ -17,11 +17,6 @@ const BarcodeScanner = ({ branding }) => {
   const idleTimerRef = useRef(null);
   const hasResultRef = useRef(false);
   const wasIdleRef = useRef(false);
-  const wasHiddenRef = useRef(false);
-  const lastTickRef = useRef(Date.now());
-  const watchdogRef = useRef(null);
-  const wakeDebounceRef = useRef(null);
-  const lastWakeTimeRef = useRef(0);
 
   // Track if we have a result (for scan callback)
   hasResultRef.current = product || error || loading;
@@ -134,79 +129,16 @@ const BarcodeScanner = ({ branding }) => {
 
   // Restart camera when waking from device sleep
   useEffect(() => {
-    // Debounced wake handler - ensures only one restart per wake event
-    // Multiple events (visibility, focus, watchdog) may fire simultaneously
-    const handleWake = () => {
-      if (isIdle) return;
-
-      const now = Date.now();
-      // Ignore if we already handled a wake in the last 5 seconds
-      if (now - lastWakeTimeRef.current < 5000) {
-        return;
-      }
-
-      // Clear any pending debounced restart
-      if (wakeDebounceRef.current) {
-        clearTimeout(wakeDebounceRef.current);
-      }
-
-      // Wait 1 second for camera to potentially recover on its own,
-      // then check if restart is actually needed
-      wakeDebounceRef.current = setTimeout(() => {
-        lastWakeTimeRef.current = Date.now();
-        restartScanning();
-      }, 1000);
-    };
-
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        wasHiddenRef.current = true;
-      } else if (document.visibilityState === 'visible' && wasHiddenRef.current) {
-        wasHiddenRef.current = false;
-        handleWake();
+      if (document.visibilityState === 'visible' && !isIdle) {
+        // Force restart camera after wake
+        restartScanning();
       }
-    };
-
-    const handlePageShow = (event) => {
-      if (event.persisted) {
-        handleWake();
-      }
-    };
-
-    const handleFocus = () => {
-      handleWake();
-    };
-
-    // Watchdog timer to detect wake from sleep via time gaps
-    const startWatchdog = () => {
-      lastTickRef.current = Date.now();
-      watchdogRef.current = setInterval(() => {
-        const now = Date.now();
-        const elapsed = now - lastTickRef.current;
-        lastTickRef.current = now;
-
-        // If more than 2 seconds passed between ticks, device likely woke from sleep
-        if (elapsed > 2000) {
-          handleWake();
-        }
-      }, 1000);
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('pageshow', handlePageShow);
-    window.addEventListener('focus', handleFocus);
-    startWatchdog();
-
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('pageshow', handlePageShow);
-      window.removeEventListener('focus', handleFocus);
-      if (watchdogRef.current) {
-        clearInterval(watchdogRef.current);
-      }
-      if (wakeDebounceRef.current) {
-        clearTimeout(wakeDebounceRef.current);
-      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isIdle]);

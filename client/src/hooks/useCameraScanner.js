@@ -10,11 +10,6 @@ export const useCameraScanner = (onScan, options = {}) => {
 
   const scannerRef = useRef(null);
   const containerIdRef = useRef('camera-scanner-container');
-  const isRestartingRef = useRef(false);
-  const retryCountRef = useRef(0);
-  const isScanningRef = useRef(false);
-  const isInitializingRef = useRef(false);
-  const maxRetries = 3;
 
   const {
     scanCooldown = 2000, // 2 second cooldown between scans
@@ -124,10 +119,8 @@ export const useCameraScanner = (onScan, options = {}) => {
   }, [preferBackCamera]);
 
   const startScanning = useCallback(async () => {
-    // Use refs for guards to avoid stale closure issues during retries
-    if (isScanningRef.current || isInitializingRef.current) return;
+    if (isScanning || isInitializing) return;
 
-    isInitializingRef.current = true;
     setIsInitializing(true);
     setError(null);
 
@@ -170,42 +163,9 @@ export const useCameraScanner = (onScan, options = {}) => {
         () => {} // Ignore scan failures (no barcode in frame)
       );
 
-      isScanningRef.current = true;
       setIsScanning(true);
-      retryCountRef.current = 0;
     } catch (err) {
       console.error('Error starting camera:', err);
-
-      // Check if we should retry (for transient errors after wake)
-      const isTransientError =
-        err.message?.includes('NotReadableError') ||
-        err.name === 'NotReadableError' ||
-        err.message?.includes('Could not start video source') ||
-        err.message?.includes('Starting video source');
-
-      if (isTransientError && retryCountRef.current < maxRetries) {
-        retryCountRef.current += 1;
-        const delay = retryCountRef.current * 1000;
-        console.log(`Camera start failed, retrying in ${delay}ms (attempt ${retryCountRef.current}/${maxRetries})`);
-
-        // Clear container and scanner for retry
-        const container = document.getElementById(containerIdRef.current);
-        if (container) {
-          container.innerHTML = '';
-        }
-        scannerRef.current = null;
-        isInitializingRef.current = false;
-        setIsInitializing(false);
-
-        setTimeout(() => {
-          isScanningRef.current = false;
-          isInitializingRef.current = false;
-          setIsScanning(false);
-          setIsInitializing(false);
-          startScanning();
-        }, delay);
-        return;
-      }
 
       let errorMessage = 'Failed to start camera';
 
@@ -218,24 +178,21 @@ export const useCameraScanner = (onScan, options = {}) => {
       }
 
       setError(errorMessage);
-      retryCountRef.current = 0;
     } finally {
-      isInitializingRef.current = false;
       setIsInitializing(false);
     }
-  }, [getPreferredCamera, handleScanSuccess]);
+  }, [isScanning, isInitializing, getPreferredCamera, handleScanSuccess]);
 
   const stopScanning = useCallback(async () => {
-    if (!scannerRef.current) return;
+    if (!scannerRef.current || !isScanning) return;
 
     try {
       await scannerRef.current.stop();
+      setIsScanning(false);
     } catch (err) {
-      // Ignore errors - scanner may already be stopped
+      console.error('Error stopping camera:', err);
     }
-    isScanningRef.current = false;
-    setIsScanning(false);
-  }, []);
+  }, [isScanning]);
 
   const toggleScanning = useCallback(async () => {
     if (isScanning) {
@@ -245,68 +202,24 @@ export const useCameraScanner = (onScan, options = {}) => {
     }
   }, [isScanning, startScanning, stopScanning]);
 
-  // Check if camera video stream is actually working
-  const isCameraWorking = useCallback(() => {
-    const container = document.getElementById(containerIdRef.current);
-    if (!container) return false;
-
-    const video = container.querySelector('video');
-    if (!video) return false;
-
-    // Check if video has valid dimensions and is playing
-    const hasValidStream = video.srcObject &&
-      video.readyState >= 2 && // HAVE_CURRENT_DATA or better
-      video.videoWidth > 0 &&
-      video.videoHeight > 0 &&
-      !video.paused;
-
-    return hasValidStream;
-  }, []);
-
   // Force restart camera (for wake from sleep scenarios)
   const restartScanning = useCallback(async () => {
-    // Prevent concurrent restart attempts
-    if (isRestartingRef.current) {
-      return;
-    }
-
-    // Check if camera is actually working - if so, don't restart
-    if (isScanningRef.current && isCameraWorking()) {
-      return;
-    }
-
-    isRestartingRef.current = true;
-    retryCountRef.current = 0;
-
-    // Force stop and destroy scanner instance
+    // Force stop regardless of state
     if (scannerRef.current) {
       try {
         await scannerRef.current.stop();
       } catch (err) {
-        // Ignore errors when stopping - scanner may already be in bad state
+        // Ignore errors when stopping
       }
-      // Clear the instance so a fresh one is created
-      scannerRef.current = null;
     }
-
-    // Clear any stale video elements from the container
-    const container = document.getElementById(containerIdRef.current);
-    if (container) {
-      container.innerHTML = '';
-    }
-
-    isScanningRef.current = false;
-    isInitializingRef.current = false;
     setIsScanning(false);
     setIsInitializing(false);
-    setError(null);
 
-    // Longer delay for camera hardware to fully release after sleep
+    // Small delay then start fresh
     setTimeout(() => {
-      isRestartingRef.current = false;
       startScanning();
-    }, 1500);
-  }, [startScanning, isCameraWorking]);
+    }, 100);
+  }, [startScanning]);
 
   // Cleanup on unmount
   useEffect(() => {

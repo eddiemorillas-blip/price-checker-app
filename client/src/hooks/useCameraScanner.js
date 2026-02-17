@@ -211,14 +211,16 @@ export const useCameraScanner = (onScan, options = {}) => {
       } catch (err) {
         // Ignore errors when stopping
       }
+      // Clear instance so a fresh one is created (stale after long sleep)
+      scannerRef.current = null;
     }
     setIsScanning(false);
     setIsInitializing(false);
 
-    // Small delay then start fresh
+    // Delay to let camera hardware recover after sleep
     setTimeout(() => {
       startScanning();
-    }, 100);
+    }, 500);
   }, [startScanning]);
 
   // Cleanup on unmount

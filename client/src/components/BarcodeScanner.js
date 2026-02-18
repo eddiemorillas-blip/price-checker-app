@@ -18,6 +18,8 @@ const BarcodeScanner = ({ branding }) => {
   const hasResultRef = useRef(false);
   const wasIdleRef = useRef(false);
   const lastActiveTimeRef = useRef(Date.now());
+  const watchdogRef = useRef(null);
+  const lastTickRef = useRef(Date.now());
 
   // Track if we have a result (for scan callback)
   hasResultRef.current = product || error || loading;
@@ -130,31 +132,55 @@ const BarcodeScanner = ({ branding }) => {
 
   // Restart camera when waking from device sleep
   useEffect(() => {
+    const fiveMinutes = 5 * 60 * 1000;
+
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
-        // Track when we went to sleep
         lastActiveTimeRef.current = Date.now();
       } else if (document.visibilityState === 'visible') {
         const sleepDuration = Date.now() - lastActiveTimeRef.current;
-        const fiveMinutes = 5 * 60 * 1000;
 
-        // If asleep for more than 5 minutes, do a full page reload
-        // This handles overnight sleep where app state is too stale
         if (sleepDuration > fiveMinutes) {
           window.location.reload();
           return;
         }
 
-        // Short sleep: just restart camera
         if (!isIdle) {
           restartScanning();
         }
       }
     };
 
+    // Watchdog timer for Guided Access mode where visibility events don't fire
+    // Checks every second for time gaps indicating device was asleep
+    const startWatchdog = () => {
+      lastTickRef.current = Date.now();
+      watchdogRef.current = setInterval(() => {
+        const now = Date.now();
+        const elapsed = now - lastTickRef.current;
+        lastTickRef.current = now;
+
+        // If more than 5 minutes passed, reload the page
+        if (elapsed > fiveMinutes) {
+          window.location.reload();
+          return;
+        }
+
+        // If 2-5 minutes passed, restart camera (short sleep)
+        if (elapsed > 2000 && !isIdle) {
+          restartScanning();
+        }
+      }, 1000);
+    };
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    startWatchdog();
+
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (watchdogRef.current) {
+        clearInterval(watchdogRef.current);
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isIdle]);

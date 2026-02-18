@@ -17,6 +17,7 @@ const BarcodeScanner = ({ branding }) => {
   const idleTimerRef = useRef(null);
   const hasResultRef = useRef(false);
   const wasIdleRef = useRef(false);
+  const lastActiveTimeRef = useRef(Date.now());
 
   // Track if we have a result (for scan callback)
   hasResultRef.current = product || error || loading;
@@ -130,9 +131,24 @@ const BarcodeScanner = ({ branding }) => {
   // Restart camera when waking from device sleep
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && !isIdle) {
-        // Force restart camera after wake
-        restartScanning();
+      if (document.visibilityState === 'hidden') {
+        // Track when we went to sleep
+        lastActiveTimeRef.current = Date.now();
+      } else if (document.visibilityState === 'visible') {
+        const sleepDuration = Date.now() - lastActiveTimeRef.current;
+        const fiveMinutes = 5 * 60 * 1000;
+
+        // If asleep for more than 5 minutes, do a full page reload
+        // This handles overnight sleep where app state is too stale
+        if (sleepDuration > fiveMinutes) {
+          window.location.reload();
+          return;
+        }
+
+        // Short sleep: just restart camera
+        if (!isIdle) {
+          restartScanning();
+        }
       }
     };
 

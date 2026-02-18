@@ -145,9 +145,22 @@ export const useCameraScanner = (onScan, options = {}) => {
 
       const cameraId = await getPreferredCamera();
 
+      // Front camera: scan larger area (80% of frame)
+      // Back camera: use focused scan area for faster detection
+      const qrboxFunction = (viewfinderWidth, viewfinderHeight) => {
+        if (useBackCamera) {
+          return { width: 250, height: 150 };
+        }
+        // Front camera: use 80% of the viewfinder
+        return {
+          width: Math.floor(viewfinderWidth * 0.8),
+          height: Math.floor(viewfinderHeight * 0.6),
+        };
+      };
+
       const config = {
-        fps: 10,
-        qrbox: { width: 250, height: 150 },
+        fps: useBackCamera ? 10 : 5, // Slower FPS for front camera to allow more processing
+        qrbox: qrboxFunction,
         formatsToSupport: [
           0,  // QR_CODE
           1,  // AZTEC
@@ -194,7 +207,7 @@ export const useCameraScanner = (onScan, options = {}) => {
     } finally {
       setIsInitializing(false);
     }
-  }, [isScanning, isInitializing, getPreferredCamera, handleScanSuccess]);
+  }, [isScanning, isInitializing, getPreferredCamera, handleScanSuccess, useBackCamera]);
 
   const stopScanning = useCallback(async () => {
     if (!scannerRef.current || !isScanning) return;
@@ -241,9 +254,20 @@ export const useCameraScanner = (onScan, options = {}) => {
         scannerRef.current = new Html5Qrcode(containerIdRef.current);
         const cameraId = await getPreferredCamera(newUseBackCamera);
 
+        // Front camera: scan larger area (80% of frame)
+        const qrboxFunction = (viewfinderWidth, viewfinderHeight) => {
+          if (newUseBackCamera) {
+            return { width: 250, height: 150 };
+          }
+          return {
+            width: Math.floor(viewfinderWidth * 0.8),
+            height: Math.floor(viewfinderHeight * 0.6),
+          };
+        };
+
         const config = {
-          fps: 10,
-          qrbox: { width: 250, height: 150 },
+          fps: newUseBackCamera ? 10 : 5,
+          qrbox: qrboxFunction,
           formatsToSupport: [
             0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
           ],

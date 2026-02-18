@@ -725,32 +725,6 @@ body {
   border-radius: var(--radius-sm);
 }
 
-.camera-switch-btn {
-  position: absolute;
-  bottom: 1rem;
-  right: 1rem;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background-color: rgba(0, 0, 0, 0.5);
-  border: 2px solid rgba(255, 255, 255, 0.6);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  pointer-events: auto;
-  transition: background-color 0.2s, transform 0.2s;
-}
-
-.camera-switch-btn:hover {
-  background-color: rgba(0, 0, 0, 0.7);
-}
-
-.camera-switch-btn:active {
-  transform: scale(0.95);
-}
-
 .camera-loading {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;

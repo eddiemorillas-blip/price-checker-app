@@ -7,7 +7,6 @@ export const useCameraScanner = (onScan, options = {}) => {
   const [isPaused, setIsPaused] = useState(false);
   const [error, setError] = useState(null);
   const [lastScanTime, setLastScanTime] = useState(0);
-  const [useBackCamera, setUseBackCamera] = useState(true);
 
   const scannerRef = useRef(null);
   const containerIdRef = useRef('camera-scanner-container');
@@ -18,11 +17,6 @@ export const useCameraScanner = (onScan, options = {}) => {
     successSound = true,
     errorSound = true,
   } = options;
-
-  // Initialize camera preference from options
-  useEffect(() => {
-    setUseBackCamera(preferBackCamera);
-  }, [preferBackCamera]);
 
   const playSound = useCallback((type) => {
     if (typeof Audio === 'undefined') return;
@@ -95,7 +89,7 @@ export const useCameraScanner = (onScan, options = {}) => {
     setLastScanTime(0); // Reset cooldown
   }, []);
 
-  const getPreferredCamera = useCallback(async (wantBackCamera = useBackCamera) => {
+  const getPreferredCamera = useCallback(async () => {
     try {
       const devices = await Html5Qrcode.getCameras();
 
@@ -103,33 +97,26 @@ export const useCameraScanner = (onScan, options = {}) => {
         throw new Error('No cameras found');
       }
 
-      // Look for back camera (environment facing)
-      const backCamera = devices.find(device =>
-        device.label.toLowerCase().includes('back') ||
-        device.label.toLowerCase().includes('rear') ||
-        device.label.toLowerCase().includes('environment')
-      );
+      if (preferBackCamera) {
+        // Look for back camera (environment facing)
+        const backCamera = devices.find(device =>
+          device.label.toLowerCase().includes('back') ||
+          device.label.toLowerCase().includes('rear') ||
+          device.label.toLowerCase().includes('environment')
+        );
 
-      // Look for front camera (user facing)
-      const frontCamera = devices.find(device =>
-        device.label.toLowerCase().includes('front') ||
-        device.label.toLowerCase().includes('user') ||
-        device.label.toLowerCase().includes('facetime')
-      );
-
-      if (wantBackCamera && backCamera) {
-        return backCamera.id;
-      } else if (!wantBackCamera && frontCamera) {
-        return frontCamera.id;
+        if (backCamera) {
+          return backCamera.id;
+        }
       }
 
-      // Fallback: if only one camera, use it; otherwise use first
+      // Default to first camera if no back camera found
       return devices[0].id;
     } catch (err) {
       console.error('Error getting cameras:', err);
       throw err;
     }
-  }, [useBackCamera]);
+  }, [preferBackCamera]);
 
   const startScanning = useCallback(async () => {
     if (isScanning || isInitializing) return;
@@ -145,22 +132,9 @@ export const useCameraScanner = (onScan, options = {}) => {
 
       const cameraId = await getPreferredCamera();
 
-      // Front camera: scan larger area (80% of frame)
-      // Back camera: use focused scan area for faster detection
-      const qrboxFunction = (viewfinderWidth, viewfinderHeight) => {
-        if (useBackCamera) {
-          return { width: 250, height: 150 };
-        }
-        // Front camera: use 80% of the viewfinder
-        return {
-          width: Math.floor(viewfinderWidth * 0.8),
-          height: Math.floor(viewfinderHeight * 0.6),
-        };
-      };
-
       const config = {
-        fps: useBackCamera ? 10 : 5, // Slower FPS for front camera to allow more processing
-        qrbox: qrboxFunction,
+        fps: 10,
+        qrbox: { width: 250, height: 150 },
         formatsToSupport: [
           0,  // QR_CODE
           1,  // AZTEC
@@ -207,7 +181,7 @@ export const useCameraScanner = (onScan, options = {}) => {
     } finally {
       setIsInitializing(false);
     }
-  }, [isScanning, isInitializing, getPreferredCamera, handleScanSuccess, useBackCamera]);
+  }, [isScanning, isInitializing, getPreferredCamera, handleScanSuccess]);
 
   const stopScanning = useCallback(async () => {
     if (!scannerRef.current || !isScanning) return;
@@ -227,68 +201,6 @@ export const useCameraScanner = (onScan, options = {}) => {
       await startScanning();
     }
   }, [isScanning, startScanning, stopScanning]);
-
-  // Switch between front and back camera
-  const switchCamera = useCallback(async () => {
-    const newUseBackCamera = !useBackCamera;
-    setUseBackCamera(newUseBackCamera);
-
-    // Stop current camera
-    if (scannerRef.current) {
-      try {
-        await scannerRef.current.stop();
-      } catch (err) {
-        // Ignore errors when stopping
-      }
-      scannerRef.current = null;
-    }
-    setIsScanning(false);
-    setIsInitializing(false);
-
-    // Start with new camera after short delay
-    setTimeout(async () => {
-      setIsInitializing(true);
-      setError(null);
-
-      try {
-        scannerRef.current = new Html5Qrcode(containerIdRef.current);
-        const cameraId = await getPreferredCamera(newUseBackCamera);
-
-        // Front camera: scan larger area (80% of frame)
-        const qrboxFunction = (viewfinderWidth, viewfinderHeight) => {
-          if (newUseBackCamera) {
-            return { width: 250, height: 150 };
-          }
-          return {
-            width: Math.floor(viewfinderWidth * 0.8),
-            height: Math.floor(viewfinderHeight * 0.6),
-          };
-        };
-
-        const config = {
-          fps: newUseBackCamera ? 10 : 5,
-          qrbox: qrboxFunction,
-          formatsToSupport: [
-            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
-          ],
-        };
-
-        await scannerRef.current.start(
-          cameraId,
-          config,
-          handleScanSuccess,
-          () => {}
-        );
-
-        setIsScanning(true);
-      } catch (err) {
-        console.error('Error switching camera:', err);
-        setError('Failed to switch camera');
-      } finally {
-        setIsInitializing(false);
-      }
-    }, 300);
-  }, [useBackCamera, getPreferredCamera, handleScanSuccess]);
 
   // Force restart camera (for wake from sleep scenarios)
   const restartScanning = useCallback(async () => {
@@ -326,14 +238,12 @@ export const useCameraScanner = (onScan, options = {}) => {
     isInitializing,
     isPaused,
     error,
-    useBackCamera,
     startScanning,
     stopScanning,
     restartScanning,
     toggleScanning,
     pauseScanning,
     resumeScanning,
-    switchCamera,
     containerId: containerIdRef.current,
   };
 };

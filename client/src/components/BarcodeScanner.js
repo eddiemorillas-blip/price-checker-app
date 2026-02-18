@@ -105,11 +105,9 @@ const BarcodeScanner = ({ branding }) => {
     isInitializing,
     isPaused,
     error: cameraError,
-    useBackCamera,
     startScanning,
     stopScanning,
     restartScanning,
-    switchCamera,
     containerId,
   } = useCameraScanner(handleScan, scannerOptions);
 
@@ -183,9 +181,7 @@ const BarcodeScanner = ({ branding }) => {
               isScanning={isScanning}
               isPaused={isPaused}
               error={cameraError}
-              useBackCamera={useBackCamera}
               onStartCamera={startScanning}
-              onSwitchCamera={switchCamera}
             />
 
             {(product || error) && (
